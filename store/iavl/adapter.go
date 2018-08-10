@@ -77,12 +77,15 @@ func (s CommitStore) Commit() store.CommitID {
 // If there was a crash during the last commit, it is guaranteed
 // to return a stable state, even if older.
 func (s CommitStore) LoadLatestVersion() error {
-	version := s.tree.Version()
-	fmt.Printf("Loading version: %d\n", version)
-	loaded, err := s.tree.LoadVersion(int64(version - 1))
-	fmt.Printf("Loaded %d: %X\n", loaded, s.tree.Hash())
-
-	loaded, err = s.tree.LoadVersion(int64(version))
+	version, err := s.tree.LoadVersion(0)
+	if err != nil {
+		return err
+	}
+	if version > 0 {
+		version--
+	}
+	fmt.Printf("Loading penultimate version: %d\n", version)
+	loaded, err := s.tree.LoadVersion(int64(version))
 	fmt.Printf("Loaded %d: %X\n", loaded, s.tree.Hash())
 
 	// _, err := s.tree.Load()
