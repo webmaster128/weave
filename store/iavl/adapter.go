@@ -1,6 +1,8 @@
 package iavl
 
 import (
+	"fmt"
+
 	"github.com/tendermint/iavl"
 	dbm "github.com/tendermint/tmlibs/db"
 
@@ -30,6 +32,7 @@ func NewCommitStore(path, name string) CommitStore {
 		panic(err)
 	}
 
+	fmt.Println("Loading commit store")
 	tree := iavl.NewVersionedTree(db, DefaultCacheSize)
 	commit := CommitStore{tree, DefaultHistory}
 	commit.LoadLatestVersion()
@@ -74,7 +77,15 @@ func (s CommitStore) Commit() store.CommitID {
 // If there was a crash during the last commit, it is guaranteed
 // to return a stable state, even if older.
 func (s CommitStore) LoadLatestVersion() error {
-	_, err := s.tree.Load()
+	version := s.tree.Version()
+	fmt.Printf("Loading version: %d\n", version)
+	loaded, err := s.tree.LoadVersion(int64(version - 1))
+	fmt.Printf("Loaded %d: %X\n", loaded, s.tree.Hash())
+
+	loaded, err = s.tree.LoadVersion(int64(version))
+	fmt.Printf("Loaded %d: %X\n", loaded, s.tree.Hash())
+
+	// _, err := s.tree.Load()
 	return err
 }
 
